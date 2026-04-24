@@ -1,0 +1,44 @@
+body {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+img {
+    display: block;
+    max-width: 50%;
+    margin: 0 auto 1rem;
+}
+
+p {
+    line-height: 1.6
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+nav a {
+    margin-left: 1.5rem;
+}
+
+.sourceCode pre {
+    font-size: 0.9rem;
+}
+
+p code {
+    font-size: 0.9rem;
+}
+
+.right {
+    float: right;
+}
+
